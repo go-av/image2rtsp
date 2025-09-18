@@ -1,0 +1,52 @@
+# Python虚拟环境
+venv/
+*.venv/
+env/
+
+# 日志文件
+*.log
+stream_server.log
+
+# 图片文件夹（可选，根据实际需求决定是否忽略）
+# images/
+
+# 临时文件
+*.tmp
+*.temp
+
+# Python编译文件
+__pycache__/
+*.py[cod]
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# IDE配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 测试和覆盖率报告
+.pytest_cache/
+coverage/
+*.cover
+
+# 构建输出
+build/
+dist/
+*.egg-info/
+
+# 环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 其他临时文件
+*.bak
+*.orig
+*.rej
+images/
