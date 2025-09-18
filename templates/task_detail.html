@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务详情 - 多视频流推送系统</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #343a40;
+            color: white;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-title {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1rem 1.25rem;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .card-title {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        .status-running {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-stopped {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .status-error {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .btn {
+            border-radius: 20px;
+            transition: all 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .task-info {
+            padding: 1.25rem;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            background-color: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+            font-size: 0.875rem;
+        }
+        .info-value {
+            color: #212529;
+            font-size: 1rem;
+        }
+        .image-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 0 1.25rem 1.25rem;
+        }
+        .image-item {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            position: relative;
+        }
+        .image-item:hover {
+            border-color: #007bff;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+        .image-item.active {
+            border-color: #28a745;
+            background-color: #f8f9fa;
+        }
+        .image-preview {
+            width: 100%;
+            height: 120px;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .image-name {
+            font-size: 0.875rem;
+            color: #495057;
+            word-break: break-all;
+            margin-bottom: 5px;
+        }
+        .image-size {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+            z-index: 10;
+        }
+        .image-item:hover .delete-btn {
+            opacity: 1;
+        }
+        .delete-btn:hover {
+            background-color: #dc3545;
+            transform: scale(1.1);
+        }
+        .delete-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .upload-section {
+            padding: 1.25rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+        }
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .upload-input {
+            margin: 15px 0;
+            width: 100%;
+            max-width: 400px;
+        }
+        .modal-content {
+            border-radius: 10px;
+            border: none;
+        }
+        .modal-header {
+            background-color: #007bff;
+            color: white;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            padding: 1rem 1.25rem;
+        }
+        .modal-title {
+            margin: 0;
+        }
+        .modal-body {
+            padding: 1.25rem;
+        }
+        .alert {
+            margin-top: 1rem;
+            border-radius: 6px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+            grid-column: 1 / -1;
+        }
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .empty-state-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .back-link {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .back-link:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        .task-name-display {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div>
+                <h1 class="header-title">任务详情</h1>
+            </div>
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left mr-2"></i>返回任务列表
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="alerts"></div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <span class="task-name-display" id="task-name-display">{{ task.name }}</span>
+                    <span id="task-status" class="status-indicator status-stopped">已停止</span>
+                </h2>
+            </div>
+            
+            <div class="task-info">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">任务ID</div>
+                        <div class="info-value">{{ task_id }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">推流地址</div>
+                        <div class="info-value"><a id="stream-url" href="{{ task.stream_url }}" target="_blank">{{ task.stream_url }}</a></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">分辨率要求</div>
+                        <div class="info-value" id="resolution">{{ task.width }}x{{ task.height }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">当前图片</div>
+                        <div class="info-value" id="current-image">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">图片总数</div>
+                        <div class="info-value" id="image-count">0</div>
+                    </div>
+                </div>
+                
+                <div class="d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <button id="start-btn" class="btn btn-success">
+                            <i class="fas fa-play mr-2"></i>开始推流
+                        </button>
+                        <button id="stop-btn" class="btn btn-danger">
+                            <i class="fas fa-stop mr-2"></i>停止推流
+                        </button>
+                        <button id="restart-btn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt mr-2"></i>重启推流
+                        </button>
+                        <button id="prev-btn" class="btn btn-secondary">
+                            <i class="fas fa-chevron-left mr-1"></i>上一张
+                        </button>
+                        <button id="next-btn" class="btn btn-secondary">
+                            下一张<i class="fas fa-chevron-right ml-1"></i>
+                        </button>
+                    </div>
+                    <button id="delete-task-btn" class="btn btn-danger">
+                        <i class="fas fa-trash-alt mr-2"></i>删除任务
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-images mr-2"></i>图片列表
+                </h2>
+            </div>
+            
+            <div class="upload-section">
+                <h3 class="mb-3">上传新图片</h3>
+                <form id="upload-form" enctype="multipart/form-data" class="upload-form">
+                    <input type="file" name="file" class="form-control upload-input" accept=".jpg,.jpeg,.png,.bmp" required>
+                    <small class="text-muted mb-2 d-block">注意：图片尺寸必须为 <span id="required-resolution">{{ task.width }}x{{ task.height }}</span></small>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload mr-2"></i>上传图片
+                    </button>
+                </form>
+            </div>
+            
+            <div id="image-list" class="image-list">
+                <!-- 图片列表将通过JavaScript动态生成 -->
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="fas fa-image"></i></div>
+                    <div class="empty-state-text">暂无图片，请上传</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认模态框 -->
+    <div id="delete-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">确认删除</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>您确定要删除此任务吗？此操作不可撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" id="confirm-delete" class="btn btn-danger">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除图片确认模态框 -->
+    <div id="delete-image-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteImageModalLabel">确认删除图片</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>您确定要删除此图片吗？此操作不可撤销。</p>
+                    <div id="last-image-warning" style="display: none;" class="alert alert-warning mt-2">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        警告：此为任务的最后一张图片，不允许删除。
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                    <button type="button" id="confirm-delete-image" class="btn btn-danger">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const taskId = '{{ task_id }}';
+        const taskName = '{{ task.name }}';
+        
+        // 显示警告信息
+        function showAlert(type, message) {
+            const alertsContainer = $('#alerts');
+            const alertDiv = $(`<div class="alert alert-${type} fade-in" role="alert">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>
+                ${message}
+            </div>`);
+            
+            alertsContainer.html(alertDiv);
+            
+            // 3秒后自动消失
+            setTimeout(() => {
+                alertDiv.fadeOut(500, () => {
+                    alertDiv.remove();
+                });
+            }, 3000);
+        }
+        
+        // 加载任务状态
+        function loadTaskStatus() {
+            $.ajax({
+                url: `/api/task/${taskId}/status`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        const status = data.status;
+                        const statusElement = $('#task-status');
+                        
+                        // 更新状态显示
+                        statusElement.removeClass('status-running status-stopped status-error');
+                        statusElement.addClass(`status-indicator status-${status.running ? 'running' : 'stopped'}`);
+                        statusElement.text(status.running ? '运行中' : '已停止');
+                        
+                        // 更新当前图片
+                        if (status.current_image) {
+                            $('#current-image').text(status.current_image);
+                        }
+                        
+                        // 更新图片数量
+                        $('#image-count').text(status.image_count);
+                        
+                        // 更新按钮状态
+                        $('#start-btn').prop('disabled', status.running);
+                        $('#stop-btn').prop('disabled', !status.running);
+                    }
+                },
+                error: function() {
+                    console.error('加载任务状态失败');
+                }
+            });
+        }
+        
+        // 加载图片列表
+        function loadImageList() {
+            $.ajax({
+                url: `/api/task/${taskId}/list`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    const imageListContainer = $('#image-list');
+                    imageListContainer.empty();
+                     
+                    if (data.success && data.images.length > 0) {
+                        data.images.forEach((filename, index) => {
+                            // 创建图片项
+                            const imageItem = $(`<div class="image-item ${index === data.current_index ? 'active' : ''}" data-filename="${filename}">
+                                <div class="image-preview">
+                                    <img src="/api/task/${taskId}/image/${filename}" alt="${filename}">
+                                    <button class="delete-btn" data-filename="${filename}">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="image-name">${filename}</div>
+                                <div class="image-size">
+                                    <span class="loading-size">加载中...</span>
+                                </div>
+                            </div>`);
+                             
+                            // 点击图片跳转到该图片
+                            imageItem.click(function(e) {
+                                // 如果点击的不是删除按钮，则跳转到该图片
+                                if (!$(e.target).closest('.delete-btn').length) {
+                                    goToImage(index);
+                                }
+                            });
+                             
+                            // 添加图片到列表
+                            imageListContainer.append(imageItem);
+                             
+                            // 尝试获取图片尺寸信息
+                            try {
+                                const img = new Image();
+                                img.src = `/api/task/${taskId}/image/${filename}?t=${new Date().getTime()}`; // 添加时间戳避免缓存
+                                img.onload = function() {
+                                    imageItem.find('.image-size').html(`${this.width}x${this.height}`);
+                                };
+                                img.onerror = function() {
+                                    imageItem.find('.image-size').html('未知尺寸');
+                                };
+                            } catch (e) {
+                                imageItem.find('.image-size').html('未知尺寸');
+                            }
+                        });
+                        
+                        // 绑定删除按钮事件
+                        $('.delete-btn').click(function(e) {
+                            e.stopPropagation();
+                            const filename = $(this).data('filename');
+                            deleteImage(filename);
+                        });
+                        
+                        // 检查是否只有一张图片，如果是则禁用删除按钮
+                        if (data.images.length === 1) {
+                            $('.delete-btn').prop('disabled', true);
+                        }
+                    } else {
+                        const emptyState = $(`<div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-image"></i></div>
+                            <div class="empty-state-text">暂无图片，请上传</div>
+                        </div>`);
+                        imageListContainer.append(emptyState);
+                    }
+                },
+                error: function() {
+                    console.error('加载图片列表失败');
+                }
+            });
+        }
+        
+        // 发送命令
+        function sendCommand(endpoint) {
+            $.ajax({
+                url: `/api/task/${taskId}/${endpoint}`,
+                type: 'POST',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        showAlert('success', data.message);
+                    } else {
+                        showAlert('danger', data.message);
+                    }
+                    loadTaskStatus();
+                    loadImageList();
+                },
+                error: function() {
+                    showAlert('danger', `执行${endpoint}命令失败`);
+                }
+            });
+        }
+        
+        // 跳转到指定图片
+        function goToImage(index) {
+            $.ajax({
+                url: `/api/task/${taskId}/goto`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ index: index }),
+                success: function(data) {
+                    if (data.success) {
+                        loadTaskStatus();
+                        loadImageList();
+                    } else {
+                        showAlert('danger', data.message);
+                    }
+                },
+                error: function() {
+                    showAlert('danger', '跳转图片失败');
+                }
+            });
+        }
+        
+        // 删除图片
+        let currentDeleteImage = null;
+        function deleteImage(filename) {
+            currentDeleteImage = filename;
+            
+            // 检查图片数量
+            const imageCount = parseInt($('#image-count').text());
+            const lastImageWarning = $('#last-image-warning');
+            const confirmDeleteBtn = $('#confirm-delete-image');
+            
+            if (imageCount <= 1) {
+                lastImageWarning.show();
+                confirmDeleteBtn.prop('disabled', true);
+            } else {
+                lastImageWarning.hide();
+                confirmDeleteBtn.prop('disabled', false);
+            }
+            
+            $('#delete-image-modal').modal('show');
+        }
+        
+        // 确认删除图片
+        function confirmDeleteImage() {
+            if (currentDeleteImage) {
+                // 再次检查图片数量，防止并发操作
+                const imageCount = parseInt($('#image-count').text());
+                
+                if (imageCount <= 1) {
+                    showAlert('warning', '任务至少需要保留一张图片');
+                    $('#delete-image-modal').modal('hide');
+                    currentDeleteImage = null;
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/api/task/${taskId}/delete_image`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ filename: currentDeleteImage }),
+                    success: function(data) {
+                        if (data.success) {
+                            showAlert('success', data.message);
+                        } else {
+                            showAlert('danger', data.message);
+                        }
+                        loadTaskStatus();
+                        loadImageList();
+                    },
+                    error: function() {
+                        showAlert('danger', '删除图片失败');
+                    },
+                    complete: function() {
+                        $('#delete-image-modal').modal('hide');
+                        currentDeleteImage = null;
+                    }
+                });
+            }
+        }
+        
+        // 删除任务
+        function confirmDeleteTask() {
+            $.ajax({
+                url: `/api/task/${taskId}/delete`,
+                type: 'POST',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        showAlert('success', data.message);
+                        // 跳转到任务列表页
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    } else {
+                        showAlert('danger', data.message);
+                        $('#delete-modal').modal('hide');
+                    }
+                },
+                error: function() {
+                    showAlert('danger', '删除任务失败');
+                    $('#delete-modal').modal('hide');
+                }
+            });
+        }
+        
+        // 初始化上传表单
+        function initUploadForm() {
+            const form = $('#upload-form');
+            const fileInput = form.find('input[type="file"]');
+            const requiredResolution = $('#required-resolution').text();
+            const [requiredWidth, requiredHeight] = requiredResolution.split('x').map(Number);
+            
+            // 文件选择事件，用于验证图片尺寸
+            fileInput.change(function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const img = new Image();
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        img.src = event.target.result;
+                        img.onload = function() {
+                            const width = this.width;
+                            const height = this.height;
+                            
+                            if (width !== requiredWidth || height !== requiredHeight) {
+                                showAlert('danger', `图片尺寸不匹配！要求尺寸: ${requiredResolution}，实际尺寸: ${width}x${height}`);
+                                fileInput.val(''); // 清空选择的文件
+                            }
+                        };
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            form.submit(function(e) {
+                e.preventDefault();
+                
+                const file = fileInput[0].files[0];
+                if (!file) {
+                    showAlert('warning', '请选择要上传的图片');
+                    return;
+                }
+                
+                const formData = new FormData(this);
+                
+                $.ajax({
+                    url: `/api/task/${taskId}/upload`,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function() {
+                        form.find('button[type="submit"]').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>上传中...');
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            showAlert('success', data.message);
+                            form[0].reset();
+                            loadTaskStatus();
+                            loadImageList();
+                        } else {
+                            showAlert('danger', data.message || '上传失败，请重试');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // 尝试从响应中获取详细错误信息
+                        try {
+                            const errorData = JSON.parse(xhr.responseText);
+                            showAlert('danger', errorData.message || '上传图片失败');
+                        } catch {
+                            showAlert('danger', '上传图片失败，请检查网络连接');
+                        }
+                    },
+                    complete: function() {
+                        form.find('button[type="submit"]').prop('disabled', false).html('<i class="fas fa-upload mr-2"></i>上传图片');
+                    }
+                });
+            });
+        }
+        
+        // 初始化模态框
+        function initModals() {
+            // 绑定删除任务事件
+            $('#delete-task-btn').click(function() {
+                $('#delete-modal').modal('show');
+            });
+            
+            // 绑定确认删除任务事件
+            $('#confirm-delete').click(confirmDeleteTask);
+            
+            // 绑定确认删除图片事件
+            $('#confirm-delete-image').click(confirmDeleteImage);
+        }
+        
+        // 初始化按钮事件
+        function initButtons() {
+            $('#start-btn').click(() => sendCommand('start'));
+            $('#stop-btn').click(() => sendCommand('stop'));
+            $('#restart-btn').click(() => sendCommand('restart'));
+            $('#prev-btn').click(() => sendCommand('prev'));
+            $('#next-btn').click(() => sendCommand('next'));
+        }
+        
+        // 页面加载时初始化
+        $(document).ready(function() {
+            // 更新任务名称显示
+            $('#task-name-display').text(taskName);
+            
+            // 初始化功能
+            loadTaskStatus();
+            loadImageList();
+            initUploadForm();
+            initModals();
+            initButtons();
+            
+            // 定期刷新状态和列表
+            setInterval(loadTaskStatus, 1000);
+            setInterval(loadImageList, 3000);
+        });
+    </script>
+</body>
+</html>

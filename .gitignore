@@ -1,4 +1,5 @@
 # Python虚拟环境
+# 虚拟环境
 venv/
 *.venv/
 env/
@@ -6,6 +7,10 @@ env/
 # 日志文件
 *.log
 stream_server.log
+
+# 静态资源文件（自动生成/上传的）
+static/images/
+static/video/
 
 # 图片文件夹（可选，根据实际需求决定是否忽略）
 # images/
@@ -17,6 +22,7 @@ stream_server.log
 # Python编译文件
 __pycache__/
 *.py[cod]
+*$py.class
 
 # 操作系统文件
 .DS_Store
@@ -24,6 +30,7 @@ Thumbs.db
 
 # IDE配置文件
 .vscode/
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -40,6 +47,7 @@ dist/
 
 # 环境变量文件
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
@@ -49,4 +57,4 @@ dist/
 *.bak
 *.orig
 *.rej
-images/
+data
